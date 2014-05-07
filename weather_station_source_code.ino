@@ -81,7 +81,7 @@ Adafruit_BMP085_Unified bmp = Adafruit_BMP085_Unified(10085);
  
 // Valeur des capteurs
 float humidite,altitude,g_pression,temperature;
-int rlum;
+long double rlum;
 String date,luminosite;
  
  
@@ -348,7 +348,6 @@ int readLight()
         tensionPhoto = tensionPhoto / 1000;
         // Calcule de photoresistance
         RPHOTO = (R2 * (VCC - tensionPhoto)) / tensionPhoto ;
-        rlum = RPHOTO;
         return RPHOTO;
         }
  
@@ -371,6 +370,11 @@ void convertirResistanceLum()
         {
                 luminosite = "Piece clair" ;
                 }
+       else if(rlum<0)
+       {
+                       luminosite = "Nuit" ;
+
+       }
         else
         {
                 luminosite = "Jour" ;
