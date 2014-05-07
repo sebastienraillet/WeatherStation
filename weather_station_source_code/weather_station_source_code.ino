@@ -8,26 +8,20 @@
  
  
  
-
+// DECLARATION UTILE GENERAL
 #define VCC 5
-
-
+// PORT SERIAL 
+#define  BAUD_RATE 9600
 // Capteur de lumiére pont diviseur
 #define R2  10000 //ohm
-
-
+//SDCARD
+#define CSV_FILE_NAME "test.csv"
 // ENTREE DES CAPTEURS
-#define chipSelect 8// Chip Select pin is tied to pin 8 on the SparkFun SD Card Shield
+#define chipSelect 8// SDCARD SPARKFUN
 #define capteurPhoto A0 // PIN Analogique 0 pour le capteur photo
 #define  DRIVE1  6   // Digital pins used to drive square wave for the EFS-10
 #define  DRIVE2  7
 #define  HSENSE  A3  // analog input hygrometer (EFS-10)
- 
-
-
-
-#define  BAUD_RATE 9600
-
 // EFS_10 humidity
 #define  LOG_INTERVAL  8192   // Throttles logging to terminal.
 #define NR_COLS 8  // Lookup table dimensions
@@ -46,7 +40,6 @@
 #define TIME_REQUEST  7    // ASCII bell character requests a time sync message
 
 
-#define CSV_FILE_NAME "test.csv"
  
  
  
