@@ -139,22 +139,19 @@ void loop() {
   float temp = temperature- 0.01;
   //Serial.println(temperature);
   humidite = voltToHumidity(voltage, temp);
- 
-  // la date
- 
- 
+  
   if(printMe++%LOG_INTERVAL == 0) {
     bmp085read();
     // Lecture de la lumiere
                 readLight();
                 convertirResistanceLum();
-       
- 
-        // la date
+
+                // Si la longeur inputString n'est pas vide alors on traite la chaine à l'intérieur
                 if(inputString.length() )
                 {
                         processSyncMessage();
-inputString  = "";
+                        // Remise à zero du buffer
+                        inputString  = "";
                         }
                 if(timeStatus()!= timeNotSet)
                 {
@@ -164,19 +161,18 @@ inputString  = "";
                
  
  
-                          Serial.print(date);
-                                Serial.print(';');
-                                Serial.print(temperature);
-                                Serial.print(';');
-                                Serial.print(g_pression);
-                                Serial.print(';');
-                                Serial.print(luminosite);
-                                Serial.print(';');
-                                Serial.print(humidite);
-                                Serial.print('\n');
-                                inputString = "";
-                // Ecriture du log sur la SDCARD
-                writeSDCARD();
+    Serial.print(date);
+    Serial.print(';');
+    Serial.print(temperature);
+    Serial.print(';');
+    Serial.print(g_pression);
+    Serial.print(';');
+    Serial.print(luminosite);
+    Serial.print(';');
+    Serial.print(humidite);
+    Serial.print('\n');
+    // Ecriture du log sur la SDCARD
+    writeSDCARD();
    
    
   }
