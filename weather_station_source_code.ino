@@ -98,9 +98,9 @@ void setup()
 	pinMode (DRIVE2, OUTPUT);
 	prev_time = micros ();
 	inputString.reserve(200); 
-  pinMode(chipSelect, OUTPUT);
+  	pinMode(chipSelect, OUTPUT);
 
-  if (!SD.begin(4)) 
+  if (!SD.begin(chipSelect)) 
   {
       Serial.println("SD initialization failed!");
       return;
