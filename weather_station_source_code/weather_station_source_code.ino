@@ -8,40 +8,43 @@
  
  
  
-#define TIME_MSG_LEN  11   // time sync to PC is HEADER followed by unix time_t as ten ascii digits
-#define TIME_HEADER  'T'   // Header tag for Serial time sync message
-#define TIME_REQUEST  7    // ASCII bell character requests a time sync message
-#define R2  10000
-#define capteurPhoto A0
+
 #define VCC 5
-// On the Ethernet Shield, CS is pin 4. Note that even if it's not
-// used as the CS pin, the hardware CS pin (10 on most Arduino boards,
-// 53 on the Mega) must be left as an output or the SD library
-// functions will not work.
-//
-// Chip Select pin is tied to pin 8 on the SparkFun SD Card Shield
-#define chipSelect 8
- 
+
+
+// Capteur de lumiére pont diviseur
+#define R2  10000 //ohm
+
+
+// ENTREE DES CAPTEURS
+#define chipSelect 8// Chip Select pin is tied to pin 8 on the SparkFun SD Card Shield
+#define capteurPhoto A0 // PIN Analogique 0 pour le capteur photo
 #define  DRIVE1  6   // Digital pins used to drive square wave for the EFS-10
 #define  DRIVE2  7
 #define  HSENSE  A3  // analog input hygrometer (EFS-10)
  
-#define  V_DIVIDER 100000       // Using a 100k Ohm resistor as voltage divider
-#define  TEMP_CALIBRATION -1.1f  // Factor to adjust the temperature sensor reading ("software calibration")
-#define  LOG_INTERVAL  8192   // Throttles logging to terminal.
-#define  STEP_SIZE_TEMP 5.0f     // Temperature step size in lookup table
-#define  STEP_SIZE_HUM 10.0f     // Humidity step size in lookup table
- 
-#define  PERIOD_US 1000  // for 1kHz, or use 10000 for 100Hz
-#define  HALF_PERIOD_US (PERIOD_US/2)
+
+
+
 #define  BAUD_RATE 9600
- 
+
+// EFS_10 humidity
+#define  LOG_INTERVAL  8192   // Throttles logging to terminal.
 #define NR_COLS 8  // Lookup table dimensions
 #define NR_ROWS 5  // ;;
- 
 #define  DEBUG  false  // Send debug info over Serial.
- 
+#define  V_DIVIDER 100000       // Using a 100k Ohm resistor as voltage divider
+#define  TEMP_CALIBRATION -1.1f  // Factor to adjust the temperature sensor reading ("software calibration")
+#define  STEP_SIZE_TEMP 5.0f     // Temperature step size in lookup table
+#define  STEP_SIZE_HUM 10.0f     // Humidity step size in lookup table
+#define  PERIOD_US 1000  // for 1kHz, or use 10000 for 100Hz
+#define  HALF_PERIOD_US (PERIOD_US/2)
+// TIME
 #define TIME_DEFAULT 1399312618
+#define TIME_MSG_LEN  11   // time sync to PC is HEADER followed by unix time_t as ten ascii digits
+#define TIME_HEADER  'T'   // Header tag for Serial time sync message
+#define TIME_REQUEST  7    // ASCII bell character requests a time sync message
+
 
 #define CSV_FILE_NAME "test.csv"
  
