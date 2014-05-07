@@ -70,7 +70,8 @@ int printMe = 0;          // just a counter to trottle logging of values
 char unChar;
 File monFichier;
 // Photo
-float R1, RPHOTO,tensionPhoto;
+float R1;
+float tensionPhoto;
 int valeurPhoto;     // Contient la lecture analogique sur le pont diviseur Photo-résistance + R 10 KOhms
  
 Adafruit_BMP085_Unified bmp = Adafruit_BMP085_Unified(10085);
@@ -336,15 +337,14 @@ void outputResult(float realtiveHumidity, float temp) {
 /* Cette fonction permet de lire le capteur photo
 *
 */
-int readLight()
+void readLight()
 {
         valeurPhoto = analogRead(capteurPhoto);
         tensionPhoto = valeurPhoto * 4.88;
         // On utilise un pont diviseur de tension entre la photoresistance, la resistance, 5V et le GND.
         tensionPhoto = tensionPhoto / 1000;
         // Calcule de photoresistance
-        RPHOTO = (R2 * (VCC - tensionPhoto)) / tensionPhoto ;
-        return RPHOTO;
+        rlum = (R2 * (VCC - tensionPhoto)) / tensionPhoto ;
         }
  
  
