@@ -17,11 +17,11 @@
 //SDCARD
 #define CSV_FILE_NAME "test.csv"
 // ENTREE DES CAPTEURS
-#define chipSelect 8// SDCARD SPARKFUN
+#define chipSelect 4// SDCARD SPARKFUN
 #define LUMINOSITY_SENSOR_PIN A0 // PIN Analogique 0 pour le capteur photo
 #define DRIVE1  6   // Digital pins used to drive square wave for the EFS-10
-#define  DRIVE2  7
-#define  HSENSE  A3  // analog input hygrometer (EFS-10)
+#define DRIVE2  7
+#define HSENSE  A3  // analog input hygrometer (EFS-10)
 // EFS_10 humidity
 #define  LOG_INTERVAL  8192   // Throttles logging to terminal.
 #define NR_COLS 8  // Lookup table dimensions
@@ -87,7 +87,7 @@ void setup()
 	pinMode (DRIVE2, OUTPUT);
 	prev_time = micros ();
 	g_serial_buffer.reserve(200);
-  	pinMode(chipSelect, OUTPUT);
+  pinMode(53, OUTPUT);
 
   if (!SD.begin(chipSelect)) 
   {
@@ -125,16 +125,15 @@ void loop()
 {
   // Generate 1kHz square wave to drive sensor. Busy wait, so blocks here.
   squareWaveSensorDrive();
-
-  float voltage = readHumiditySensor();
-  float temp = temperature- 0.01;
-  humidite = voltToHumidity(voltage, temp);
+  //float voltage = readHumiditySensor();
+  //humidite = voltToHumidity(voltage, temp);
 
   if(printMe++%LOG_INTERVAL == 0)
   {
     bmp085read();
     // Read and convert luminosity
     g_luminosity = convertResistorToLuminosity(readLuminosity());
+    humidite = voltToHumidity(readHumiditySensor(), temperature);
 
     // Si la longeur g_serial_buffer n'est pas vide alors on traite la chaine à l'intérieur
     if(g_serial_buffer.length() != 0)
@@ -147,10 +146,8 @@ void loop()
       g_current_date_time = getStringDateTime();
     }
 
-
-
-    //Serial.print(g_current_date_time);
-    //Serial.print(';');
+    Serial.print(g_current_date_time);
+    Serial.print(';');
     Serial.print(temperature);
     Serial.print(';');
     Serial.print(g_pression);
@@ -159,10 +156,9 @@ void loop()
     Serial.print(';');
     Serial.print(humidite);
     Serial.print('\n');
-    // Ecriture du log sur la SDCARD
+
+    // Write current data in CSV file on SD Card
     writeSDCARD();
-
-
   }
 }
 
@@ -355,6 +351,8 @@ String getStringDateTime()
   l_string_data_time +=' ';
   l_string_data_time += String(hour()) ;
   l_string_data_time += convertMinutesToString(minute());
+
+  return l_string_data_time;
 }
 
 String convertMinutesToString(int p_digits)
