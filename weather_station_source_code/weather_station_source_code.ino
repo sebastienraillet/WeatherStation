@@ -5,47 +5,43 @@
 #include <SPI.h>
 #include <SD.h>
 #include <Time.h>
+#include <EthernetUdp.h>
+#include <Ethernet.h>
 
-
-
-// DECLARATION UTILE GENERAL
+// DEFINES
 #define VCC 5
 // PORT SERIAL
 #define  BAUD_RATE 9600
-// Capteur de lumiére pont diviseur
+// Capteur de lumiere pont diviseur
 #define R2  10000 //ohm
 //SDCARD
-#define CSV_FILE_NAME "test.csv"
+#define CSV_FILE_NAME "data_weather_station.csv"
 // ENTREE DES CAPTEURS
-#define chipSelect 4// SDCARD SPARKFUN
+#define CHIP_SELECT 4 // For Official Shield Ethernet
 #define LUMINOSITY_SENSOR_PIN A0 // PIN Analogique 0 pour le capteur photo
 #define DRIVE1  6   // Digital pins used to drive square wave for the EFS-10
 #define DRIVE2  7
 #define HSENSE  A3  // analog input hygrometer (EFS-10)
 // EFS_10 humidity
-#define  LOG_INTERVAL  8192   // Throttles logging to terminal.
+#define LOG_INTERVAL  8192   // Throttles logging to terminal.
 #define NR_COLS 8  // Lookup table dimensions
 #define NR_ROWS 5  // ;;
-#define  DEBUG  false  // Send debug info over Serial.
-#define  V_DIVIDER 100000       // Using a 100k Ohm resistor as voltage divider
-#define  TEMP_CALIBRATION -1.1f  // Factor to adjust the temperature sensor reading ("software calibration")
-#define  STEP_SIZE_TEMP 5.0f     // Temperature step size in lookup table
-#define  STEP_SIZE_HUM 10.0f     // Humidity step size in lookup table
-#define  PERIOD_US 1000  // for 1kHz, or use 10000 for 100Hz
-#define  HALF_PERIOD_US (PERIOD_US/2)
+#define DEBUG  false  // Send debug info over Serial.
+#define V_DIVIDER 100000       // Using a 100k Ohm resistor as voltage divider
+#define TEMP_CALIBRATION -1.1f  // Factor to adjust the temperature sensor reading ("software calibration")
+#define STEP_SIZE_TEMP 5.0f     // Temperature step size in lookup table
+#define STEP_SIZE_HUM 10.0f     // Humidity step size in lookup table
+#define PERIOD_US 1000  // for 1kHz, or use 10000 for 100Hz
+#define HALF_PERIOD_US (PERIOD_US/2)
 // TIME
-#define TIME_DEFAULT 1399312618
+#define TIME_DEFAULT 1400019506
 #define TIME_MSG_LEN  11   // time sync to PC is HEADER followed by unix time_t as ten ascii digits
 // Serial Header
 #define TIME_SYNC_HEADER  0xFF // Header tag to send time sync on serial
 #define SEND_CSV_HEADER   'C' // Header tag to send CSV contents on serial
 #define SEND_VALUES       'A' // Header tag to send the weather station current values on serial
 
-/*
-   Hygrometer characteristics, impedance at different temps.
-   From data-sheet at
-   http://www.produktinfo.conrad.com/datenblaetter/150000-174999/156545-da-01-en-Feuchtesensor_EFS10.pdf
-*/
+/* Lookup table for humidity sensor */
 float lookupTable[NR_ROWS][NR_COLS] = {
   /* T/H      20%            30%            40%           50%           60%             70%             80%            90%           */
   /* 15C */  {6364*1000.0f,  1803*1000.0f,  543*1000.0f,  166*1000.0f,  55.64*1000.0f,  20.94*1000.0f,  8.07*1000.0f,  3.26*1000.0f},
@@ -56,46 +52,47 @@ float lookupTable[NR_ROWS][NR_COLS] = {
 };
 
 // State variables
-//
 unsigned long prev_time;  // Used to generate square wave to drive humidity sensor
 byte phase = 0;           // Used to generate square wave to drive humidity sensor
 float prevVoltage = 0.0f; // Used for keping a moving average of humidity sensor readings
 int printMe = 0;          // just a counter to trottle logging of values
 
-//GLOBAL
-//SD
-char unChar;
+// Global variables
+/* Ethernet Shield */
+byte g_mac_adress[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC};
+byte g_ip_adress[] = {192,168,1,102};
+EthernetServer server(80);
 
-// Photo
-float R1;
-float tensionPhoto;
-int valeurPhoto;     // Contient la lecture analogique sur le pont diviseur Photo-résistance + R 10 KOhms
-
+/* BMP085 recover instance */
 Adafruit_BMP085_Unified bmp = Adafruit_BMP085_Unified(10085);
 
-// Valeur des capteurs
-float humidite,altitude,g_pression,temperature;
+/* Value of differents sensors*/
+float g_humidite, g_altitude, g_pression, temperature;
 String g_current_date_time, g_luminosity;
 
-
 String g_serial_buffer = "";      // a string to hold incoming data
+String g_ethernet_buffer = "";
 
 void setup()
 {
-	Serial.begin(BAUD_RATE);
 	pinMode (DRIVE1, OUTPUT);
 	pinMode (DRIVE2, OUTPUT);
 	prev_time = micros ();
 	g_serial_buffer.reserve(200);
-  pinMode(53, OUTPUT);
 
-  if (!SD.begin(chipSelect)) 
+  /* Initialize Serial connection */
+  SerialInit(BAUD_RATE);
+
+  /* Initialize Ethernet connection */
+  EthernetInit(g_mac_adress, g_ip_adress);
+
+  /* Initialize SD card */
+  if (!SDCardInit())
   {
-      Serial.println("SD initialization failed!");
-      while(1);
+    while(1);
   }
 
-  /* Initialise the BMP 085 sensor */
+  /* Initialize the BMP 085 sensor */
   if (!bmp.begin())
   {
     Serial.print("BMP085 initialization failed");
@@ -126,15 +123,13 @@ void loop()
 {
   // Generate 1kHz square wave to drive sensor. Busy wait, so blocks here.
   squareWaveSensorDrive();
-  //float voltage = readHumiditySensor();
-  //humidite = voltToHumidity(voltage, temp);
 
   if(printMe++%LOG_INTERVAL == 0)
   {
     bmp085read();
     // Read and convert luminosity
     g_luminosity = convertResistorToLuminosity(readLuminosity());
-    humidite = voltToHumidity(readHumiditySensor(), temperature);
+    g_humidite = voltToHumidity(readHumiditySensor(), temperature);
 
     // Si la longeur g_serial_buffer n'est pas vide alors on traite la chaine à l'intérieur
     if(g_serial_buffer.length() != 0)
@@ -155,12 +150,61 @@ void loop()
     Serial.print(';');
     Serial.print(g_luminosity);
     Serial.print(';');
-    Serial.print(humidite);
+    Serial.print(g_humidite);
     Serial.print('\n');
 
     // Write current data in CSV file on SD Card
     writeSDCARD();
   }
+
+  EthernetClient client = server.available();
+
+  if (client) 
+  {
+    boolean currentLineIsBlank = true;
+    boolean writeInBuffer = true;
+    while(client.connected())
+    {
+      if (client.available())
+      {
+        char c = client.read();
+        if (writeInBuffer) 
+        {
+          g_ethernet_buffer += c;
+        }
+        if (c == '\n' && currentLineIsBlank) 
+        {
+          // send a standard http response header
+          client.println("HTTP/1.1 200 OK");
+          client.println("Content-Type: text/html");
+          client.println("Connection: close");  // the connection will be closed after completion of the response
+          client.println();
+          client.println("<!DOCTYPE HTML>");
+          client.println("<html>");
+          client.println("Hello world");
+          client.println("<br />");
+          client.println("</html>");
+          break;
+        }
+        
+        if (c == '\n') 
+        {
+          currentLineIsBlank = true;
+          writeInBuffer = false;
+        }
+        else if (c != '\r')
+        {
+          currentLineIsBlank = false;
+        }
+      }
+    }
+    delay(1);
+    client.stop();
+  }
+}
+
+boolean verifyIfGetRequest(String p_request) {
+  return p_request.startsWith("GET");
 }
 
 
@@ -230,7 +274,8 @@ float voltToHumidity(float humidityVolt, float temp) {
   else // Edge case.
     relativeHumidity = 0.0f; // TODO: linear iterpolation here
 
-  if(DEBUG && printMe%LOG_INTERVAL == 0) {
+  if(DEBUG && printMe%LOG_INTERVAL == 0) 
+  {
     Serial.print("DEBUG: humidityVolt: ");
     Serial.print(humidityVolt);
     Serial.print(" temp: ");
@@ -268,6 +313,7 @@ float voltToHumidity(float humidityVolt, float temp) {
     Serial.print(" rH1: ");
     Serial.println( rH1);
   }
+
   return relativeHumidity;
 }
 
@@ -427,13 +473,24 @@ void processMessageOnSerial()
       Serial.print(';');
       Serial.print(g_luminosity);
       Serial.print(';');
-      Serial.print(humidite);
+      Serial.print(g_humidite);
       Serial.print('\n');
       g_serial_buffer = "";
       break;
     }
   }
   g_serial_buffer = "";
+}
+
+boolean SDCardInit() {
+  Serial.print("Initializing SD card...");
+  pinMode(53, OUTPUT);
+  if (!SD.begin(CHIP_SELECT)) {
+    Serial.println("initialization failed!");
+    return false;
+  }
+  Serial.println("initialization done.");
+  return true;
 }
 
 void readSDCARD()
@@ -466,7 +523,7 @@ void writeSDCARD()
     l_fichier.print(';');
     l_fichier.print(g_luminosity);
     l_fichier.print(';');
-    l_fichier.print(humidite);
+    l_fichier.print(g_humidite);
     l_fichier.print('\r\n');
     l_fichier.close();
   }
@@ -488,29 +545,30 @@ bool Contains(String s, String search) {
 
 void sendDataDay()
 {
-
-char c;
-String bufferData;
- File l_fichier = SD.open(CSV_FILE_NAME, FILE_READ);
- String line ="";
+  char c;
+  String bufferData;
+  File l_fichier = SD.open(CSV_FILE_NAME, FILE_READ);
+  String line ="";
   if(l_fichier &&  timeStatus()!= timeNotSet)
   {
-        // Lire tous le fichier
+    // Lire tous le fichier
     while (l_fichier.available())
     {
       c = l_fichier.read();
       line+= c;
-      if( c == '\n'  && Contains(line,getStringDate()))
+      if( c == '\n'  && Contains(line,getStringDate())) 
+      {
         while(l_fichier.available())
         {
           c = l_fichier.read();
           line+= c;
         }
-        else
-          line = "";
+      }
+      else
+      {
+        line = "";
+      }    
     }
-    
-    
   }
   
   if(line != "")
@@ -540,10 +598,21 @@ void bmp085read()
     /* Update this next line with the current SLP for better results      */
     float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;
 
-    altitude = bmp.pressureToAltitude(seaLevelPressure, l_sensor_event.pressure, temperature);
+    g_altitude = bmp.pressureToAltitude(seaLevelPressure, l_sensor_event.pressure, temperature);
   }
   else
   {
     Serial.println("BMP085 sensor error");
   }
+}
+
+void SerialInit (int p_speed) {
+  Serial.begin(p_speed);
+}
+
+void EthernetInit (byte* p_mac_adress, byte* p_ip_adress) {
+  Ethernet.begin(p_mac_adress, p_ip_adress);
+  server.begin();
+  Serial.print("Server is at ");
+  Serial.println(Ethernet.localIP());
 }
