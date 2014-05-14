@@ -37,9 +37,9 @@
 #define TIME_DEFAULT 1400019506
 #define TIME_MSG_LEN  11   // time sync to PC is HEADER followed by unix time_t as ten ascii digits
 // Serial Header
-#define TIME_SYNC_HEADER  0xFF // Header tag to send time sync on serial
+#define TIME_SYNC_HEADER  '$' // Header tag to send time sync on serial
 #define SEND_CSV_HEADER   'C' // Header tag to send CSV contents on serial
-#define SEND_VALUES       'A' // Header tag to send the weather station current values on serial
+#define SEND_VALUES       ';' // Header tag to send the weather station current values on serial
 
 /* Lookup table for humidity sensor */
 float lookupTable[NR_ROWS][NR_COLS] = {
@@ -430,7 +430,7 @@ String convertMinutesToString(int p_digits)
 
 time_t requestSync()
 {
-  Serial.write(TIME_SYNC_HEADER);  
+  Serial.println(TIME_SYNC_HEADER);  
   return 0; // the time will be sent later in response to serial mesg
 }
 
@@ -513,8 +513,10 @@ void writeSDCARD()
   File l_fichier = SD.open(CSV_FILE_NAME, FILE_WRITE);
 
 // Vérification de la possibilité de lire l'heure et la date... 
-  if(l_fichier &&  timeStatus()!= timeNotSet)
+  if(l_fichier)
   {
+   if( timeStatus()!= timeNotSet ) 
+  { 
     l_fichier.print(g_current_date_time);
     l_fichier.print(';');
     l_fichier.print(temperature);
@@ -525,12 +527,14 @@ void writeSDCARD()
     l_fichier.print(';');
     l_fichier.print(g_humidite);
     l_fichier.print('\r\n');
-    l_fichier.close();
+    l_fichier.close();}
+    else
+    {
+    Serial.println("L'heure n'est pas réglés");
+    
+    }
   }
-  else
-  {
-  Serial.println("L'heure n'est pas réglés");
-  }
+
 }
 
 bool Contains(String s, String search) {
@@ -560,7 +564,7 @@ void sendDataDay()
         while(l_fichier.available())
         {
           if(l_fichier == '\r')
-          c = 0xF8;
+          c = '!';
           else
           line+= c;
           
@@ -577,9 +581,9 @@ void sendDataDay()
   
   if(line != "")
   {
-  Serial.print(0xFA);
+  Serial.print('&');
   Serial.print(line);
-  Serial.print(0xF9);
+  Serial.print('@');
   }
   
 }
