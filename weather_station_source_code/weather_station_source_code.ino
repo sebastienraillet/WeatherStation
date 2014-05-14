@@ -555,13 +555,17 @@ void sendDataDay()
     while (l_fichier.available())
     {
       c = l_fichier.read();
-      line+= c;
       if( c == '\n'  && Contains(line,getStringDate())) 
       {
         while(l_fichier.available())
         {
-          c = l_fichier.read();
+          if(l_fichier == '\r')
+          c = 0xF8;
+          else
           line+= c;
+          
+          c = l_fichier.read();
+          
         }
       }
       else
