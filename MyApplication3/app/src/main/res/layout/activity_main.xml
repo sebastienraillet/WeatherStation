@@ -1,0 +1,189 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="fill_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:keepScreenOn="true"
+    tools:context="com.example.myapplication3.app.MainActivity"
+    android:background="#394264"
+    android:clickable="false">
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Température : "
+        android:id="@+id/textView"
+        android:layout_marginTop="43dp"
+        android:textColor="#e64c65"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Humidité: "
+        android:id="@+id/textView2"
+        android:textColor="#e64c65"
+        android:layout_below="@+id/progressBar"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Pression :"
+        android:id="@+id/textView3"
+        android:textColor="#e64c65"
+        android:layout_below="@+id/progressBar3"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Date de la station :"
+        android:id="@+id/textView4"
+        android:textColor="#e64c65"
+        android:layout_below="@+id/textView3"
+        android:layout_marginTop="45dp"
+        android:layout_alignParentLeft="true"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Luminosité :"
+        android:id="@+id/textView5"
+        android:textColor="#e64c65"
+        android:layout_below="@+id/progressBar2"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="N/A"
+        android:id="@+id/textTemp"
+        android:layout_alignTop="@+id/textView"
+        android:layout_toLeftOf="@+id/bpSend"
+        android:layout_marginRight="187dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="N/A"
+        android:id="@+id/textHum"
+        android:layout_below="@+id/progressBar"
+        android:layout_alignLeft="@+id/textTemp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="N/A"
+        android:id="@+id/textPression"
+        android:layout_above="@+id/progressBar4"
+        android:layout_alignLeft="@+id/textLum" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="N/A"
+        android:id="@+id/textAltitude"
+        android:layout_above="@+id/textDEBOG"
+        android:layout_alignLeft="@+id/textPression" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="DEBUG"
+        android:id="@+id/textDEBOG"
+        android:layout_below="@+id/textView4"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="96dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="N/A"
+        android:id="@+id/textLum"
+        android:layout_below="@+id/progressBar2"
+        android:layout_alignLeft="@+id/textHum" />
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar"
+        android:layout_below="@+id/textView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignRight="@+id/bpSend" />
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar2"
+        android:layout_alignRight="@+id/progressBar"
+        android:layout_below="@+id/textView2"
+        android:layout_alignParentLeft="true" />
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar3"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textView5"
+        android:layout_alignParentLeft="true" />
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar4"
+        android:layout_alignRight="@+id/progressBar3"
+        android:layout_below="@+id/textView3"
+        android:layout_above="@+id/textAltitude"
+        android:layout_alignParentLeft="true" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RAFRAICHIR"
+        android:id="@+id/bpSend"
+        android:layout_alignParentTop="true"
+        android:layout_alignRight="@+id/progressBar3" />
+
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Connection"
+        android:id="@+id/Connection"
+        android:checked="false"
+        android:layout_alignTop="@+id/bpSend"
+        android:layout_alignParentLeft="true" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignRight="@+id/progressBar"
+        android:layout_below="@+id/textDEBOG"
+        android:id="@id/charts">
+
+
+        </LinearLayout>
+
+</RelativeLayout>
