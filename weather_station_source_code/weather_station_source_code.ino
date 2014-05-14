@@ -356,6 +356,19 @@ String getStringDateTime()
   return l_string_data_time;
 }
 
+String getStringDate()
+{
+  String l_string_data_time;
+  // Recover the differents DateTime elements (Day, month, year, etc.)
+  l_string_data_time = String(day());
+  l_string_data_time +='/';
+  l_string_data_time +=month();
+  l_string_data_time +='/';
+  l_string_data_time +=year();
+
+  return l_string_data_time;
+}
+
 String convertMinutesToString(int p_digits)
 {
   String l_minutes_string;
@@ -461,6 +474,52 @@ void writeSDCARD()
   {
   Serial.println("L'heure n'est pas réglés");
   }
+}
+
+bool Contains(String s, String search) {
+    int max = s.length() - search.length();
+
+    for (int i = 0; i <= max; i++) {
+        if (s.substring(i) == search) return true; // or i
+    }
+
+    return false; //or -1
+} 
+
+void sendDataDay()
+{
+
+char c;
+String bufferData;
+ File l_fichier = SD.open(CSV_FILE_NAME, FILE_READ);
+ String line ="";
+  if(l_fichier &&  timeStatus()!= timeNotSet)
+  {
+        // Lire tous le fichier
+    while (l_fichier.available())
+    {
+      c = l_fichier.read();
+      line+= c;
+      if( c == '\n'  && Contains(line,getStringDate()))
+        while(l_fichier.available())
+        {
+          c = l_fichier.read();
+          line+= c;
+        }
+        else
+          line = "";
+    }
+    
+    
+  }
+  
+  if(line != "")
+  {
+  Serial.print(0xFA);
+  Serial.print(line);
+  Serial.print(0xF9);
+  }
+  
 }
 
 void bmp085read()
