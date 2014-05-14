@@ -37,7 +37,7 @@
 #define TIME_DEFAULT 1399312618
 #define TIME_MSG_LEN  11   // time sync to PC is HEADER followed by unix time_t as ten ascii digits
 // Serial Header
-#define TIME_SYNC_HEADER  'T' // Header tag to send time sync on serial
+#define TIME_SYNC_HEADER  0xFF // Header tag to send time sync on serial
 #define SEND_CSV_HEADER   'C' // Header tag to send CSV contents on serial
 #define SEND_VALUES       'A' // Header tag to send the weather station current values on serial
 
@@ -102,7 +102,8 @@ void setup()
     while(1);
   }
 
-  setTime(TIME_DEFAULT);
+  setSyncProvider( requestSync);  //set function to call when sync required
+//  setTime(TIME_DEFAULT);
 }
 
 /*
@@ -368,6 +369,12 @@ String convertMinutesToString(int p_digits)
   return l_minutes_string;
 }
 
+time_t requestSync()
+{
+  Serial.write(TIME_SYNC_HEADER);  
+  return 0; // the time will be sent later in response to serial mesg
+}
+
 void processMessageOnSerial()
 {
   // if time sync available from Serial port, update time and return true
@@ -435,7 +442,8 @@ void writeSDCARD()
 {
   File l_fichier = SD.open(CSV_FILE_NAME, FILE_WRITE);
 
-  if(l_fichier)
+// Vérification de la possibilité de lire l'heure et la date... 
+  if(l_fichier &&  timeStatus()!= timeNotSet)
   {
     l_fichier.print(g_current_date_time);
     l_fichier.print(';');
@@ -448,6 +456,10 @@ void writeSDCARD()
     l_fichier.print(humidite);
     l_fichier.print('\r\n');
     l_fichier.close();
+  }
+  else
+  {
+  Serial.println("L'heure n'est pas réglés");
   }
 }
 
