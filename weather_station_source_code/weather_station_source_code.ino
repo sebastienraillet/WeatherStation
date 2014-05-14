@@ -15,7 +15,7 @@
 // Capteur de lumiere pont diviseur
 #define R2  10000 //ohm
 //SDCARD
-#define CSV_FILE_NAME "data_weather_station.csv"
+#define CSV_FILE_NAME "data.csv"
 // ENTREE DES CAPTEURS
 #define CHIP_SELECT 4 // For Official Shield Ethernet
 #define LUMINOSITY_SENSOR_PIN A0 // PIN Analogique 0 pour le capteur photo
@@ -38,8 +38,8 @@
 #define TIME_MSG_LEN  11   // time sync to PC is HEADER followed by unix time_t as ten ascii digits
 // Serial Header
 #define TIME_SYNC_HEADER  '$' // Header tag to send time sync on serial
-#define SEND_CSV_HEADER   'C' // Header tag to send CSV contents on serial
-#define SEND_VALUES       ';' // Header tag to send the weather station current values on serial
+#define SEND_CSV_HEADER   ';' // Header tag to send CSV contents on serial
+#define SEND_VALUES       'A' // Header tag to send the weather station current values on serial
 
 /* Lookup table for humidity sensor */
 float lookupTable[NR_ROWS][NR_COLS] = {
@@ -449,7 +449,6 @@ void processMessageOnSerial()
       for(int i=1; i < TIME_MSG_LEN; i++)
       {
         c = g_serial_buffer[i];
-        Serial.print(c);
         if( c >= '0' && c <= '9')
         {
           l_time_receive = (10 * l_time_receive) + (c - '0') ; // convert digits to a number
@@ -459,7 +458,8 @@ void processMessageOnSerial()
     }
     else if(c == SEND_CSV_HEADER)
     {
-      readSDCARD();
+      //  readSDCARD();
+      sendDataDay();
       g_serial_buffer = "";
       break;
     }
@@ -510,6 +510,7 @@ void readSDCARD()
 
 void writeSDCARD()
 {
+
   File l_fichier = SD.open(CSV_FILE_NAME, FILE_WRITE);
 
 // Vérification de la possibilité de lire l'heure et la date... 
@@ -534,6 +535,10 @@ void writeSDCARD()
     
     }
   }
+  else
+  {
+  Serial.println("Impossible d'ecrire dans le fichier");
+  }
 
 }
 
@@ -553,39 +558,70 @@ void sendDataDay()
   String bufferData;
   File l_fichier = SD.open(CSV_FILE_NAME, FILE_READ);
   String line ="";
+  int indexC=0;
+  int idxT= 0;
+  String tableauHeure[24];
+  String subtract;
+  int drapeau= 0;
+  
   if(l_fichier &&  timeStatus()!= timeNotSet)
   {
     // Lire tous le fichier
     while (l_fichier.available())
     {
-      c = l_fichier.read();
-      if( c == '\n'  && Contains(line,getStringDate())) 
-      {
-        while(l_fichier.available())
-        {
-          if(l_fichier == '\r')
+     
+      c = l_fichier.read();      
+          if(c == '\r')
           c = '!';
-          else
-          line+= c;
-          
-          c = l_fichier.read();
-          
-        }
-      }
-      else
-      {
-        line = "";
-      }    
+          else if(c != '\n')
+            line+= c;
+            
     }
-  }
+
   
+
   if(line != "")
   {
-  Serial.print('&');
-  Serial.print(line);
-  Serial.print('@');
+          indexC =  line.indexOf(':');
+          subtract = line.substring(indexC-2,indexC-1);
+          for(int u=0;u<idxT;u++)
+          {
+          if(tableauHeure[idxT]== subtract)
+          drapeau=1;
+         
+          }
+          if(drapeau)
+          {
+          line+= c;
+          tableauHeure[idxT++] = subtract; 
+          }
+
+       Serial.print("l'heure");
+       Serial.print(subtract);
+
+ for(int u  = 0 ; u < idxT;u++)
+ {
+ if(Contains(subtract,tableauHeure[idxT]))
+   {
+   drapeau = 1 ; 
+   }
+ 
+ }
+
+ if(!drapeau)
+{
+
+  Serial.println(line);
+  drapeau = 0;
+} 
+
+  }
+  else
+  {
+  Serial.println("chaine vide");
   }
   
+    }
 }
 
 void bmp085read()
