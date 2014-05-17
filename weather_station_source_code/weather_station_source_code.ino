@@ -15,7 +15,7 @@
 // Capteur de lumiere pont diviseur
 #define R2  10000 //ohm
 //SDCARD
-#define CSV_FILE_NAME "data.csv"
+#define CSV_FILE_NAME "data3.csv"
 // ENTREE DES CAPTEURS
 #define CHIP_SELECT 4 // For Official Shield Ethernet
 #define LUMINOSITY_SENSOR_PIN A0 // PIN Analogique 0 pour le capteur photo
@@ -142,7 +142,7 @@ void loop()
       g_current_date_time = getStringDateTime();
     }
 
-    Serial.print(g_current_date_time);
+   Serial.print(g_current_date_time);
     Serial.print(';');
     Serial.print(temperature);
     Serial.print(';');
@@ -152,6 +152,7 @@ void loop()
     Serial.print(';');
     Serial.print(g_humidite);
     Serial.print('\n');
+   
 
     // Write current data in CSV file on SD Card
     writeSDCARD();
@@ -527,11 +528,11 @@ void writeSDCARD()
     l_fichier.print(g_luminosity);
     l_fichier.print(';');
     l_fichier.print(g_humidite);
-    l_fichier.print('\r\n');
+    l_fichier.print('\n');
     l_fichier.close();}
     else
     {
-    Serial.println("L'heure n'est pas réglés");
+    Serial.println("$");
     
     }
   }
@@ -542,86 +543,131 @@ void writeSDCARD()
 
 }
 
-bool Contains(String s, String search) {
-    int max = s.length() - search.length();
+int tabHeureuse[23] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-    for (int i = 0; i <= max; i++) {
-        if (s.substring(i) == search) return true; // or i
-    }
+int beginwith(String temp, String so) {
+  
+ int drapeau =1;
 
-    return false; //or -1
+  for(int x=0;x<so.length();x++)
+  {
+  if(temp[x] != so[x])
+  drapeau = 0;
+          }
+          
+          return drapeau;
 } 
+
+int beginwith(String temp, String so,int tab) {
+  
+ int drapeau =1;
+
+  for(int x=0;x<so.length();x++)
+  {
+  if(temp[x] != so[x] && tab == 0)
+        drapeau = 0;
+          }
+          
+          return drapeau;
+} 
+
+/*
+*  En entrée : lecture d'un fichier CSV depuis une carte SD de l'arduino
+*  En sortie : Je veux récupérer une valeur par heure donc une Ligne du csv correspondante 
+*  
+
+Type du CSV : 
+timeDate;Température;Pression(hPa);Luminosité;Humidité
+10/04/14 13:30;10.5;1013.5;Piece sombre;53.00
+
+Retour de la fonction 
+getStringDate() : -> La date en cours
+Exemple : 
+
+Retour Aujourd'hui ->  14/04/14 
+
+*/
 
 void sendDataDay()
 {
   char c;
-  String bufferData;
-  File l_fichier = SD.open(CSV_FILE_NAME, FILE_READ);
-  String line ="";
+  String line[24];
+  String temp ="";
   int indexC=0;
   int idxT= 0;
   String tableauHeure[24];
-  String subtract;
-  int drapeau= 0;
-  
+  int drapeau= 1;
+  String hString= "",stringSend ="" ;
+
+  File l_fichier = SD.open(CSV_FILE_NAME, FILE_READ);
+
   if(l_fichier &&  timeStatus()!= timeNotSet)
   {
     // Lire tous le fichier
     while (l_fichier.available())
     {
-     
-      c = l_fichier.read();      
-          if(c == '\r')
-          c = '!';
-          else if(c != '\n')
-            line+= c;
-            
+    
+    c = l_fichier.read();
+    if(c ==  '\n')
+      {
+      
+      if(beginwith(temp,getStringDate()))// la date ok
+         {
+               for(int uneH=0;uneH<23;uneH++)
+               {
+                 stringSend.reserve(200);
+                 hString.reserve(200);
+                 hString = String(uneH);
+                 
+                 if(uneH<10)
+               
+                 
+                 {stringSend = getStringDate()+"  "+hString;}
+                 else
+                 
+                 { stringSend= getStringDate()+" "+hString;}
+                  
+                 Serial.println("-------debut-----");
+                 Serial.println(stringSend);
+                 Serial.println(uneH);
+                 Serial.println(temp);
+                 Serial.println("-------fin-----");
+
+                 
+                 if(beginwith(temp,stringSend,tabHeureuse[uneH]))
+                 {
+                 tabHeureuse[uneH]=1;
+                 line[idxT++]=temp;
+                 }
+               
+               }
+                 
+        }
+
+      }
+    else
+        temp +=c;            
     }
+    
+    
+    // Fonctionnement correct ici je renvoie sur la liaison série ma trame formée
+     Serial.print('&');
+    
+    for(int sd=0; sd < idxT;sd++)
+    {
+     Serial.print(line[sd]);
 
-  
+     if(!(sd<idxT))// derniere element
+     Serial.print('!');  
+    }
+    //EOF
+    Serial.print('-');
+    // debug
+    Serial.println(' ');
+  }
 
-  if(line != "")
-  {
-          indexC =  line.indexOf(':');
-          subtract = line.substring(indexC-2,indexC-1);
-          for(int u=0;u<idxT;u++)
-          {
-          if(tableauHeure[idxT]== subtract)
-          drapeau=1;
-         
-          }
-          if(drapeau)
-          {
-          line+= c;
-          tableauHeure[idxT++] = subtract; 
-          }
 
-       Serial.print("l'heure");
-       Serial.print(subtract);
-
- for(int u  = 0 ; u < idxT;u++)
- {
- if(Contains(subtract,tableauHeure[idxT]))
-   {
-   drapeau = 1 ; 
-   }
  
- }
-
- if(!drapeau)
-{
-
-  Serial.println(line);
-  drapeau = 0;
-} 
-
-  }
-  else
-  {
-  Serial.println("chaine vide");
-  }
-  
-    }
 }
 
 void bmp085read()
